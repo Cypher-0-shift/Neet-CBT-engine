@@ -18,11 +18,11 @@ export function runMigrations(db: Database): void {
 
   const currentVersion = (db.prepare('SELECT MAX(version) as version FROM schema_migrations').get() as { version: number | null })?.version || 0;
 
-  // For development, it's <project_root>/src/main/database/migrations
+  // For development, it's <project_root>/app/main/database/migrations
   // For production, we would need to ensure the migrations folder is copied (e.g. to resourcesPath)
   let migrationsDir = app.isPackaged 
     ? join(process.resourcesPath, 'migrations') 
-    : join(app.getAppPath(), 'src', 'main', 'database', 'migrations');
+    : join(app.getAppPath(), 'app', 'main', 'database', 'migrations');
 
   let files: string[] = [];
   try {
