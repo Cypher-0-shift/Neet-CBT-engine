@@ -1,0 +1,107 @@
+You are an expert Data Extraction AI and Educational Content Engineer. I am going to provide you with the text/content of a NEET UG exam (or you can read the attached PDF). 
+
+Your task is to extract all the questions, options, and answers from this document and perfectly format them into two specific JSON files: `metadata.json` and `questions.json`. 
+
+**CRITICAL INSTRUCTION FOR THE AI:**
+If you have a Python environment (like ChatGPT Advanced Data Analysis or Claude with computer use/artifacts), you must use Python to write these two JSON files to a folder, compress that folder into a `.zip` file, and provide me with a download link to the `.zip` file. If you cannot generate a downloadable `.zip` file, output the complete, raw JSON code for both files so I can do it manually.
+
+---
+
+### Strict Schema Requirements
+
+My software's import engine uses strict Zod validation schemas. If your output deviates, the import will fail.
+
+#### 1. metadata.json
+Extract the test name, duration, and marks from the document if available. If not, use sensible defaults (200 mins, 720 marks).
+```json
+{
+  "name": "String (Extract from document or use a generic name like 'NEET Practice Test')",
+  "description": "String (Brief description)",
+  "durationMinutes": 200,
+  "maxMarks": 720,
+  "negativeMarkingRatio": 0.25,
+  "subjectDistribution": {
+    "Physics": 50,
+    "Chemistry": 50,
+    "Biology": 100
+  },
+  "source": "String (optional)",
+  "year": 2024,
+  "version": "1.0",
+  "author": "AI Generator",
+  "instructions": "String (Extract any exam instructions provided in the text)",
+  "language": "EN",
+  "examType": "NEET",
+  "scoringRules": {
+    "correct": 4,
+    "incorrect": -1,
+    "unattempted": 0
+  }
+}
+```
+
+#### 2. questions.json
+Extract EVERY question from the provided document and distribute them. Each question must strictly adhere to this schema:
+```json
+[
+  {
+    "id": "String (Generate a unique UUIDv4)",
+    "questionNumber": 1,
+    "subject": "String (Infer based on content. MUST BE EXACTLY: 'Physics', 'Chemistry', or 'Biology'. Combine Botany/Zoology into Biology.)",
+    "chapter": "String (Infer the NCERT chapter)",
+    "topic": "String (Infer the topic)",
+    "subtopic": "String (Infer the subtopic)",
+    "difficulty": "String (MUST BE EXACTLY: 'EASY', 'MEDIUM', or 'HARD')",
+    "questionType": "String (MUST BE EXACTLY: 'MCQ')",
+    "expectedTimeSeconds": 60,
+    "questionText": "String (The exact question prompt. Use LaTeX math formatting like \\( x^2 \\) for equations)",
+    "questionImage": "String (Extract image path if available, e.g., 'images/q1.png', else null)",
+    "additionalImages": [], 
+    "tags": ["Extract", "Tags"],
+    "options": [
+      {
+        "id": "String (Generate a unique UUIDv4)",
+        "label": "A",
+        "text": "String (Extract Option A text)",
+        "displayOrder": 0
+      },
+      {
+        "id": "String (Generate a unique UUIDv4)",
+        "label": "B",
+        "text": "String (Extract Option B text)",
+        "displayOrder": 1
+      },
+      {
+        "id": "String (Generate a unique UUIDv4)",
+        "label": "C",
+        "text": "String (Extract Option C text)",
+        "displayOrder": 2
+      },
+      {
+        "id": "String (Generate a unique UUIDv4)",
+        "label": "D",
+        "text": "String (Extract Option D text)",
+        "displayOrder": 3
+      }
+    ],
+    "answer": {
+      "correctOptionId": "String (MUST EXACTLY match the 'id' of the correct option from the options array above. Solve the question if no answer key is provided)",
+      "marks": 4,
+      "negativeMarks": 1,
+      "explanation": "String (Provide a detailed step-by-step solution)",
+      "solutionImages": [],
+      "conceptTested": "String",
+      "commonMistakes": "String"
+    }
+  }
+]
+```
+
+### Steps for the AI to Execute:
+1. Read the attached PDF or the text provided below this prompt.
+2. Extract all questions, options, and correct answers.
+3. Map them exactly into the `questions.json` array format.
+4. Construct the `metadata.json` file.
+5. If there are images in the PDF, try to extract them into an `images/` folder and map the relative paths. If you cannot extract images, leave the image fields as `null`.
+6. (If supported) Write a python script to dump these dicts to JSON files, pack them into a `.zip`, and provide the download link.
+7. (If python is unsupported) Print the two JSON files perfectly formatted in code blocks. No markdown output outside code blocks. No explanations.

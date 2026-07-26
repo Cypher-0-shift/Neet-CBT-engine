@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS Custom Properties (Theme Tokens) ──────────────────────── */
+
+:root {
+  /* Typography */
+  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+
+  /* Transitions */
+  --transition-fast: 100ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 300ms ease;
+
+  /* Z-index layers */
+  --z-dropdown: 100;
+  --z-modal-backdrop: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+}
+
+/* ─── Base Styles ────────────────────────────────────────────────── */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: theme('colors.app.background');
+  color: theme('colors.app.text-primary');
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ─── Scrollbar Styles ───────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: theme('colors.app.text-muted');
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: theme('colors.app.text-secondary');
+}
+
+/* ─── Focus Styles ───────────────────────────────────────────────── */
+
+:focus-visible {
+  outline: 2px solid theme('colors.app.secondary');
+  outline-offset: 2px;
+}
+
+/* ─── Selection ──────────────────────────────────────────────────── */
+
+::selection {
+  background-color: theme('colors.app.secondary');
+  color: white;
+}
+
+/* ─── Exam-Specific Utility Classes ──────────────────────────────── */
+
+@layer components {
+  .exam-header {
+    @apply bg-exam-header-bg text-exam-header-text;
+  }
+
+  .exam-sidebar {
+    @apply bg-exam-sidebar-bg border-l border-exam-border;
+  }
+
+  .exam-footer {
+    @apply bg-exam-footer-bg border-t border-exam-border;
+  }
+
+  .palette-btn {
+    @apply w-9 h-9 rounded text-xs font-semibold flex items-center justify-center cursor-pointer
+           transition-shadow duration-100 hover:shadow-exam-hover;
+  }
+
+  .nav-btn {
+    @apply px-4 py-2 rounded text-sm font-medium cursor-pointer
+           transition-colors duration-100
+           border border-exam-border;
+  }
+
+  .nav-btn-primary {
+    @apply nav-btn bg-app-primary text-white border-app-primary hover:bg-app-primary-hover;
+  }
+
+  .nav-btn-secondary {
+    @apply nav-btn bg-white text-app-text-primary hover:bg-app-surface-alt;
+  }
+
+  .nav-btn-danger {
+    @apply nav-btn bg-app-danger text-white border-app-danger hover:opacity-90;
+  }
+}

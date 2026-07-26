@@ -1,0 +1,91 @@
+{
+  "name": "neet-cbt-practice",
+  "productName": "NEET CBT Practice",
+  "version": "1.0.0",
+  "description": "Production-quality offline exam simulation and performance intelligence system for NEET CBT preparation",
+  "main": ".vite/build/index.js",
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "build:win": "electron-builder --win",
+    "rebuild": "npx @electron/rebuild -f -w better-sqlite3",
+    "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "echarts": "^5.6.0",
+    "echarts-for-react": "^3.0.0",
+    "electron-log": "^5.3.0",
+    "jszip": "^3.10.0",
+    "lucide-react": "^1.26.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.0.0",
+    "react-virtualized-auto-sizer": "^2.0.3",
+    "react-window": "^2.3.0",
+    "uuid": "^14.0.1",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.0.0",
+    "@electron-forge/maker-squirrel": "^7.0.0",
+    "@electron-forge/maker-zip": "^7.0.0",
+    "@electron-forge/plugin-vite": "^7.0.0",
+    "@electron/rebuild": "^3.7.2",
+    "@types/better-sqlite3": "^7.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/react-virtualized-auto-sizer": "^1.0.4",
+    "@types/react-window": "^1.8.8",
+    "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "autoprefixer": "^10.0.0",
+    "electron": "^33.4.11",
+    "electron-builder": "^26.15.3",
+    "postcss": "^8.0.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0"
+  },
+  "keywords": [
+    "neet",
+    "cbt",
+    "exam",
+    "practice",
+    "offline",
+    "electron"
+  ],
+  "license": "UNLICENSED",
+  "build": {
+    "appId": "com.neet.cbtpractice",
+    "productName": "NEET CBT Practice",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      ".vite/build/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "**/node_modules/better-sqlite3/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "src/renderer/assets/icons/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}
