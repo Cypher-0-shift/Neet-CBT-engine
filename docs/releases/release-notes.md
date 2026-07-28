@@ -1,5 +1,16 @@
 # Release Notes
 
+## v1.0.1 - Performance & UI Polish
+**Date**: July 2026
+
+### Improvements
+- **Hardware Optimization**: Removed forced GPU rasterization flags. The application now degrades gracefully on older or integrated GPUs, avoiding visual artifacts and crashes.
+- **Performance**: Code-split the heavy `echarts` dependency from the initial app bundle. The Exam interface now loads significantly faster on low-end hardware.
+- **UI Polish**: Fixed double "Back" buttons in the Import, Test Summary, and Analytics screens for a cleaner user experience.
+- **Stability**: Added a graceful fallback dialog if the native SQLite module fails to initialize, providing clear instructions instead of failing silently.
+- **Optimization**: Removed dead/unused analytics interface files from the renderer bundle to reduce overall package size.
+
+
 ## v1.0.0 - Initial Enterprise Release
 **Date**: July 2026
 

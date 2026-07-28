@@ -1,7 +1,7 @@
 {
   "name": "neet-cbt-practice",
   "productName": "NEET CBT Practice",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Production-quality offline exam simulation and performance intelligence system for NEET CBT preparation",
   "main": ".vite/build/index.js",
   "scripts": {
