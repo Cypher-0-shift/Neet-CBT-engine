@@ -12,7 +12,8 @@ export function CandidateDetailsScreen() {
   const testId = searchParams.get('testId');
   const navigate = useNavigate();
   
-  const { createSession, isSaving } = useSessionStore();
+  const createSession = useSessionStore(s => s.createSession);
+  const [isCreating, setIsCreating] = useState(false);
   const { settings } = useSettingsStore();
   
   const [name, setName] = useState(settings.defaultCandidateName || '');
@@ -35,6 +36,7 @@ export function CandidateDetailsScreen() {
       return;
     }
 
+    setIsCreating(true);
     try {
       setError(null);
       await createSession(testId, {
@@ -48,6 +50,7 @@ export function CandidateDetailsScreen() {
     } catch (err: any) {
       console.error('Failed to initialize session:', err);
       setError(err.message || 'Failed to initialize session. Please try again.');
+      setIsCreating(false);
     }
   };
 
@@ -126,10 +129,10 @@ export function CandidateDetailsScreen() {
 
 
             <div className="flex justify-end space-x-4 pt-4 border-t border-gray-100">
-              <Button type="button" variant="ghost" onClick={handleCancel} disabled={isSaving}>
+              <Button type="button" variant="ghost" onClick={handleCancel} disabled={isCreating}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" isLoading={isSaving}>
+              <Button type="submit" variant="primary" isLoading={isCreating}>
                 Proceed to Instructions
               </Button>
             </div>

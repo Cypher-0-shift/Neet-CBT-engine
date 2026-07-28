@@ -58,9 +58,6 @@ export function AnalyticsScreen() {
         {/* Header */}
         <div className="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200">
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" onClick={() => navigate('/library')} className="p-2">
-              <ArrowLeft size={20} />
-            </Button>
             <div>
               <h1 className="text-2xl font-bold text-slate-900">Exam Results</h1>
               <p className="text-sm text-slate-500">Overall Score: <strong className="text-slate-900">{data.overall.totalScore}</strong> / {data.overall.maxScore}</p>

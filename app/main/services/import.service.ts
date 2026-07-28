@@ -13,6 +13,6 @@ export interface ImportService {
    */
   importTestPackage(
     zipFilePath: string,
-    onProgress: (step: ImportStep, label: string, progress: number) => void
+    onProgress: (step: ImportStep, label: string, progress: number, detail?: string) => void
   ): Promise<TestImportResult>;
 }

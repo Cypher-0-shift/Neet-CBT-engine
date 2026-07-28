@@ -12,7 +12,7 @@ export function ImportWizard() {
   
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
-  const [progress, setProgress] = useState<{ step: string; label: string; progress: number } | null>(null);
+  const [progress, setProgress] = useState<{ step: string; label: string; progress: number; detail: string | null } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -40,13 +40,13 @@ export function ImportWizard() {
     
     setIsImporting(true);
     setError(null);
-    setProgress({ step: 'init', label: 'Preparing to import...', progress: 0 });
+    setProgress({ step: 'init', label: 'Preparing to import...', progress: 0, detail: null });
 
     try {
       const result = await ipc(IpcChannel.IMPORT_TEST_PACKAGE, { filePath: selectedFile });
       
       if (result.success && result.testId) {
-        setProgress({ step: 'done', label: 'Import complete!', progress: 100 });
+        setProgress({ step: 'done', label: 'Import complete!', progress: 100, detail: null });
         // Small delay to let user see 100%
         setTimeout(() => {
           navigate(`/test-summary/${result.testId}`);
@@ -71,14 +71,7 @@ export function ImportWizard() {
   return (
     <div className="min-h-screen bg-gray-50 p-8 flex flex-col items-center">
       
-      <div className="w-full max-w-2xl flex items-center mb-8">
-        <Button variant="ghost" onClick={handleCancel} disabled={isImporting}>
-          <ArrowLeft size={20} className="mr-2" />
-          Back
-        </Button>
-      </div>
-
-      <Card className="w-full max-w-2xl">
+      <Card className="w-full max-w-2xl mt-8">
         <CardContent className="p-8">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Import Test Package</h2>
@@ -140,7 +133,10 @@ export function ImportWizard() {
               <h3 className="text-xl font-bold text-gray-900 mb-2">
                 {progress?.progress === 100 ? 'Import Complete' : 'Importing Package...'}
               </h3>
-              <p className="text-gray-500 mb-8">{progress?.label || 'Processing...'}</p>
+              <p className="text-gray-500 mb-2">{progress?.label || 'Processing...'}</p>
+              {progress?.detail && (
+                <p className="text-xs text-gray-400 mb-8 font-mono">{progress.detail}</p>
+              )}
               
               <ProgressBar 
                 progress={progress?.progress || 0} 

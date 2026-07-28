@@ -11,26 +11,11 @@ import { IpcChannel } from '@shared/types/ipc.types';
 
 export function ReviewScreen() {
   const navigate = useNavigate();
-  const { currentSession } = useSessionStore();
+  const currentSession = useSessionStore(s => s.currentSession);
   const stats = useReviewStats();
   const { submitExam, isSubmitting, error } = useSubmission();
 
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
-
-  // Request fullscreen
-  useEffect(() => {
-    const ensureFullscreen = async () => {
-      try {
-        const isFullscreen = await ipc(IpcChannel.GET_FULLSCREEN_STATE);
-        if (!isFullscreen) {
-          await ipc(IpcChannel.TOGGLE_FULLSCREEN);
-        }
-      } catch (err) {
-        console.error('Fullscreen error', err);
-      }
-    };
-    ensureFullscreen();
-  }, []);
 
   if (!currentSession) {
     return <div className="p-8">No active session found.</div>;

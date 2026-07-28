@@ -14,12 +14,15 @@ interface SessionState {
   navigationHistory: import('@shared/types/session.types').NavigationEvent[];
   isSubmitting: boolean;
   syncError: string | null;
-  isSaving: boolean;
 
   // Actions
   createSession: (testId: string, candidate: CandidateDetails) => Promise<void>;
   resumeSession: (sessionId: string) => Promise<void>;
-  saveAnswer: (questionId: string, answer: Partial<Answer>) => Promise<void>;
+  /**
+   * Applies the optimistic UI update for an answer synchronously.
+   * The actual IPC write is handled by useAnswerSync (debounced, 300 ms).
+   */
+  saveAnswer: (questionId: string, answer: Partial<Answer>) => void;
   toggleReviewFlag: (questionId: string) => void;
   markQuestionVisited: (questionId: string) => void;
   setCurrentQuestion: (index: number, subject?: string) => void;
@@ -39,7 +42,6 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   currentQuestionIndex: 0,
   navigationHistory: [],
   isSubmitting: false,
-  isSaving: false,
   syncError: null,
 
   createSession: async (testId: string, candidate: CandidateDetails) => {
@@ -84,36 +86,28 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
   },
 
-  saveAnswer: async (questionId: string, answerData: Partial<Answer>) => {
+  /**
+   * Synchronous optimistic update only.
+   * The IPC write is handled externally by useAnswerSync so it can be debounced
+   * without toggling any store boolean on every keystroke.
+   */
+  saveAnswer: (questionId: string, answerData: Partial<Answer>) => {
     const { currentSession, answers } = get();
     if (!currentSession) return;
 
-    set({ isSaving: true });
-    
-    // Optimistic update
-    const newAnswer = {
+    const newAnswer: Answer = {
       ...answers[questionId],
       ...answerData,
       sessionId: currentSession.id,
-      questionId
+      questionId,
     };
 
     set(state => ({
       answers: {
         ...state.answers,
-        [questionId]: newAnswer as Answer
-      }
+        [questionId]: newAnswer,
+      },
     }));
-
-    try {
-      await ipc(IpcChannel.SAVE_ANSWER, { answer: newAnswer as any });
-      if (get().syncError) set({ syncError: null }); // Clear error on success
-    } catch (error) {
-      console.error('Failed to save answer to backend:', error);
-      set({ syncError: 'Failed to sync with database. Please do not close the application.' });
-    } finally {
-      set({ isSaving: false });
-    }
   },
 
   toggleReviewFlag: (questionId: string) => {

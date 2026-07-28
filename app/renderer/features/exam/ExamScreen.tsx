@@ -13,6 +13,7 @@ import { NavigationBar } from './components/NavigationBar';
 import { useNavigation } from './hooks/useNavigation';
 import { useQuestion } from './hooks/useQuestion';
 import { useAutosave } from './hooks/useAutosave';
+import { useAnswerSync } from './hooks/useAnswerSync';
 import { useExamEvents } from './hooks/useExamEvents';
 import { useIntelligentTimer } from './hooks/useIntelligentTimer';
 import { useExamTimerEffects } from './hooks/useExamTimerEffects';
@@ -22,8 +23,15 @@ import { ExamLoader } from '../../components/ui/ExamLoader';
 
 export function ExamScreen() {
   const navigate = useNavigate();
-  const { currentSession, currentQuestionIndex, currentSubject, markQuestionVisited, recordNavigation, setCurrentQuestion, syncError } = useSessionStore();
-  const { activeTestQuestions, fetchTestQuestions } = useTestStore();
+  const currentSession = useSessionStore(s => s.currentSession);
+  const currentQuestionIndex = useSessionStore(s => s.currentQuestionIndex);
+  const currentSubject = useSessionStore(s => s.currentSubject);
+  const markQuestionVisited = useSessionStore(s => s.markQuestionVisited);
+  const recordNavigation = useSessionStore(s => s.recordNavigation);
+  const setCurrentQuestion = useSessionStore(s => s.setCurrentQuestion);
+  const syncError = useSessionStore(s => s.syncError);
+  const activeTestQuestions = useTestStore(s => s.activeTestQuestions);
+  const fetchTestQuestions = useTestStore(s => s.fetchTestQuestions);
   const { settings } = useSettingsStore();
 
   const { submitExam: submitFinalExam } = useSubmission();
@@ -48,23 +56,10 @@ export function ExamScreen() {
   // Activate hooks
   useIntelligentTimer();
   useAutosave(settings.autoSaveIntervalSeconds * 1000);
+  useAnswerSync();
   useExamEvents();
   useExamIntegrity();
 
-  // Request fullscreen
-  useEffect(() => {
-    const ensureFullscreen = async () => {
-      if (!settings.autoFullscreen) return;
-      try {
-        if (!document.fullscreenElement) {
-          await document.documentElement.requestFullscreen();
-        }
-      } catch (err) {
-        console.error('Fullscreen error', err);
-      }
-    };
-    ensureFullscreen();
-  }, [settings.autoFullscreen]);
   useExamTimerEffects();
 
   const {

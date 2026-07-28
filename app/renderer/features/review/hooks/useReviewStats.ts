@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useShallow } from 'zustand/shallow';
 import { useSessionStore } from '../../../stores/sessionStore';
 import { useTestStore } from '../../../stores/testStore';
 
@@ -23,8 +24,14 @@ export interface ReviewStats {
 }
 
 export function useReviewStats(): ReviewStats {
-  const { answers, reviewFlags, visitedQuestions } = useSessionStore();
-  const { activeTestQuestions } = useTestStore();
+  const { answers, reviewFlags, visitedQuestions } = useSessionStore(
+    useShallow(s => ({
+      answers: s.answers,
+      reviewFlags: s.reviewFlags,
+      visitedQuestions: s.visitedQuestions,
+    }))
+  );
+  const activeTestQuestions = useTestStore(s => s.activeTestQuestions);
 
   return useMemo(() => {
     const subjectsMap = new Map<string, SubjectStats>();

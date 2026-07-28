@@ -3,8 +3,9 @@ import { useTestStore } from '../../../stores/testStore';
 import { useSettingsStore } from '../../../stores/settingsStore';
 
 export function ExamHeader() {
-  const { currentSession, timeRemainingSeconds } = useSessionStore();
-  const { activeTestSummary } = useTestStore();
+  const currentSession = useSessionStore(s => s.currentSession);
+  const timeRemainingSeconds = useSessionStore(s => s.timeRemainingSeconds);
+  const activeTestSummary = useTestStore(s => s.activeTestSummary);
   const { settings } = useSettingsStore();
 
   const formatTime = (seconds: number) => {

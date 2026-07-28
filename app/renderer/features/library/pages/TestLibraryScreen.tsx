@@ -1,6 +1,9 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Library, AlertTriangle } from 'lucide-react';
+import { Grid } from 'react-window';
+import type { CellComponentProps } from 'react-window';
+import { AutoSizer } from 'react-virtualized-auto-sizer';
 import { useTestStore } from '../../../stores/testStore';
 import { useSessionStore } from '../../../stores/sessionStore';
 import { SearchBar } from '../components/SearchBar';
@@ -14,21 +17,97 @@ import { Button } from '../../../components/ui/Button';
 import { ipc } from '../../../lib/ipc-client';
 import { IpcChannel } from '@shared/types/ipc.types';
 import type { Session } from '@shared/types/session.types';
+import type { TestSummary } from '@shared/types/test.types';
 import { ExamLoader } from '../../../components/ui/ExamLoader';
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+/** Approximate height (px) of each TestCard row (including gap). */
+const CARD_ROW_HEIGHT = 220;
+/** Horizontal gap between cards (px). Matches the original gap-6 = 24px */
+const CARD_GAP = 24;
+
+/**
+ * Compute how many columns fit for a given container width.
+ * Matches the original responsive breakpoints approximately:
+ *   < 768px  → 1 col  (md breakpoint)
+ *   < 1024px → 2 cols (lg breakpoint)
+ *   < 1280px → 3 cols (xl breakpoint)
+ *   ≥ 1280px → 4 cols
+ */
+function computeColumnCount(containerWidth: number): number {
+  if (containerWidth < 768) return 1;
+  if (containerWidth < 1024) return 2;
+  if (containerWidth < 1280) return 3;
+  return 4;
+}
+
+// ---------------------------------------------------------------------------
+// Cell data / renderer
+// ---------------------------------------------------------------------------
+
+interface LibraryCellData {
+  tests: TestSummary[];
+  selectedTestId: string | null;
+  columnCount: number;
+  onSelect: (id: string) => void;
+}
+
+function LibraryCell({
+  rowIndex,
+  columnIndex,
+  style,
+  tests,
+  selectedTestId,
+  columnCount,
+  onSelect,
+}: CellComponentProps<LibraryCellData>) {
+  const index = rowIndex * columnCount + columnIndex;
+  if (index >= tests.length) return <div style={style} />;
+
+  const test = tests[index];
+
+  return (
+    <div
+      style={{
+        ...style,
+        // Inset the card slightly to reproduce the gap-6 spacing.
+        // The cell spans the full CARD_GAP-aware width; we add padding to create gutters.
+        paddingRight: columnIndex < columnCount - 1 ? CARD_GAP : 0,
+        paddingBottom: CARD_GAP,
+      }}
+    >
+      <TestCard
+        test={test}
+        selected={selectedTestId === test.id}
+        onClick={t => onSelect(t.id)}
+      />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// TestLibraryScreen
+// ---------------------------------------------------------------------------
 
 export function TestLibraryScreen() {
   const navigate = useNavigate();
-  const { availableTests, fetchAvailableTests, isLoadingTests, deleteTest } = useTestStore();
-  const { resumeSession } = useSessionStore();
+  const availableTests = useTestStore(s => s.availableTests);
+  const fetchAvailableTests = useTestStore(s => s.fetchAvailableTests);
+  const isLoadingTests = useTestStore(s => s.isLoadingTests);
+  const deleteTest = useTestStore(s => s.deleteTest);
+  const resumeSession = useSessionStore(s => s.resumeSession);
 
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortOption, setSortOption] = useState<SortOption>('recent-import');
-  
+
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
-  
+
   const [incompleteSessions, setIncompleteSessions] = useState<Session[]>([]);
-  
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showResumeModal, setShowResumeModal] = useState(false);
   const [sessionToResume, setSessionToResume] = useState<Session | null>(null);
@@ -47,20 +126,19 @@ export function TestLibraryScreen() {
     }
   };
 
-  const selectedTest = useMemo(() => {
-    return availableTests.find(t => t.id === selectedTestId) || null;
-  }, [availableTests, selectedTestId]);
+  const selectedTest = useMemo(
+    () => availableTests.find(t => t.id === selectedTestId) || null,
+    [availableTests, selectedTestId]
+  );
 
   const filteredAndSortedTests = useMemo(() => {
     let result = [...availableTests];
 
-    // Filter by query
     if (query.trim()) {
       const lowerQuery = query.toLowerCase();
       result = result.filter(t => t.name.toLowerCase().includes(lowerQuery));
     }
 
-    // Filter by status
     if (statusFilter !== 'all') {
       if (statusFilter === 'completed') {
         result = result.filter(t => t.sessionsCount > 0);
@@ -72,18 +150,14 @@ export function TestLibraryScreen() {
       }
     }
 
-    // Filter by exam type (Assuming standard NEET if no examType property is present on TestSummary, we can just skip for now)
-    // Actually, in TestSummary we don't have examType. So we skip the filter logic or mock it.
-    
-    // Sort
     result.sort((a, b) => {
       switch (sortOption) {
         case 'alphabetical':
           return a.name.localeCompare(b.name);
         case 'highest-score':
-          return 0; // Not implemented on summary yet
+          return 0;
         case 'lowest-score':
-          return 0; // Not implemented on summary yet
+          return 0;
         case 'last-attempt':
           return new Date(b.lastAttemptDate || 0).getTime() - new Date(a.lastAttemptDate || 0).getTime();
         case 'most-attempts':
@@ -100,9 +174,7 @@ export function TestLibraryScreen() {
   const testHasIncompleteSession = (tId: string) => incompleteSessions.some(s => s.testId === tId);
 
   const handleStartNewAttempt = () => {
-    if (selectedTestId) {
-      navigate(`/candidate?testId=${selectedTestId}`);
-    }
+    if (selectedTestId) navigate(`/candidate?testId=${selectedTestId}`);
   };
 
   const handleResumeClick = () => {
@@ -130,7 +202,7 @@ export function TestLibraryScreen() {
       try {
         await ipc(IpcChannel.UPDATE_SESSION, {
           sessionId: sessionToResume.id,
-          updates: { status: 'ABANDONED' as any } // Cast to any or actual enum
+          updates: { status: 'ABANDONED' as any },
         });
         await loadIncompleteSessions();
         setShowResumeModal(false);
@@ -150,12 +222,21 @@ export function TestLibraryScreen() {
     }
   };
 
+  // Stable columnKey / rowKey callbacks required by react-window v2
+  const columnKey = useCallback(
+    ({ rowIndex, columnIndex, data }: { rowIndex: number; columnIndex: number; data: LibraryCellData }) => {
+      const index = rowIndex * data.columnCount + columnIndex;
+      return index < data.tests.length ? data.tests[index].id : `empty-${rowIndex}-${columnIndex}`;
+    },
+    []
+  );
+
   return (
     <div className="h-full bg-gray-50 flex overflow-hidden">
-      
+
       {/* Main Library View */}
       <div className={`flex-1 flex flex-col h-full transition-all duration-300 ${selectedTest ? 'mr-0 sm:mr-96' : ''}`}>
-        
+
         {/* Header */}
         <header className="bg-white border-b border-gray-200 px-8 py-6 shrink-0">
           <div className="flex justify-between items-center mb-6">
@@ -165,18 +246,13 @@ export function TestLibraryScreen() {
               </div>
               <h1 className="text-2xl font-bold text-gray-900">Test Library</h1>
             </div>
-            <Button onClick={() => navigate('/import')}>
-              Import Package
-            </Button>
+            <Button onClick={() => navigate('/import')}>Import Package</Button>
           </div>
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <SearchBar query={query} onChange={setQuery} />
             <div className="flex items-center gap-4">
-              <FilterPanel 
-                statusFilter={statusFilter} 
-                onStatusChange={setStatusFilter}
-              />
+              <FilterPanel statusFilter={statusFilter} onStatusChange={setStatusFilter} />
               <div className="w-px h-8 bg-gray-300 mx-2" />
               <SortMenu activeSort={sortOption} onChange={setSortOption} />
             </div>
@@ -184,27 +260,46 @@ export function TestLibraryScreen() {
         </header>
 
         {/* Scrollable Test Grid */}
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 min-h-0 p-8 overflow-hidden">
           {isLoadingTests ? (
             <ExamLoader message="Loading tests..." inline />
           ) : availableTests.length === 0 ? (
             <EmptyState type="no-tests" onAction={() => navigate('/import')} />
           ) : filteredAndSortedTests.length === 0 ? (
-            <EmptyState type="no-results" onAction={() => {
-              setQuery('');
-              setStatusFilter('all');
-            }} />
+            <EmptyState type="no-results" onAction={() => { setQuery(''); setStatusFilter('all'); }} />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredAndSortedTests.map((test) => (
-                <TestCard 
-                  key={test.id} 
-                  test={test} 
-                  selected={selectedTestId === test.id}
-                  onClick={(t) => setSelectedTestId(t.id)} 
-                />
-              ))}
-            </div>
+            /* Virtualized grid — fills remaining height via AutoSizer */
+            <AutoSizer
+              renderProp={({ width, height }: { width: number | undefined; height: number | undefined }) => {
+                const w = width ?? 600;
+                const h = height ?? 400;
+                const columnCount = computeColumnCount(w);
+                // Each column gets an equal share of the full width.
+                // The last column has no right-padding (handled in LibraryCell).
+                const columnWidth = Math.floor(w / columnCount);
+                const rowCount = Math.ceil(filteredAndSortedTests.length / columnCount);
+
+                const cellProps: LibraryCellData = {
+                  tests: filteredAndSortedTests,
+                  selectedTestId,
+                  columnCount,
+                  onSelect: setSelectedTestId,
+                };
+
+                return (
+                  <Grid
+                    cellComponent={LibraryCell}
+                    cellProps={cellProps}
+                    columnCount={columnCount}
+                    columnWidth={columnWidth}
+                    rowCount={rowCount}
+                    rowHeight={CARD_ROW_HEIGHT}
+                    columnKey={columnKey}
+                    style={{ width: w, height: h }}
+                  />
+                );
+              }}
+            />
           )}
         </main>
       </div>

@@ -47,9 +47,9 @@ export function registerImportHandlers(): void {
       db
     );
 
-    const onProgress = (step: ImportStep, label: string, progress: number) => {
-      // Send progress event to renderer
-      event.sender.send(IpcChannel.IMPORT_PROGRESS, { step, label, progress });
+    const onProgress = (step: ImportStep, label: string, progress: number, detail?: string) => {
+      // Send progress event to renderer — detail carries granular file-count messages
+      event.sender.send(IpcChannel.IMPORT_PROGRESS, { step, label, progress, detail: detail ?? null });
     };
 
     return importService.importTestPackage(filePath, onProgress);

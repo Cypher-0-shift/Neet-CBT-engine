@@ -4,7 +4,9 @@ import { ipc } from '../../../lib/ipc-client';
 import { IpcChannel } from '@shared/types/ipc.types';
 
 export function useExamEvents() {
-  const { currentQuestionIndex, currentSubject, currentSession } = useSessionStore();
+  const currentQuestionIndex = useSessionStore(s => s.currentQuestionIndex);
+  const currentSubject = useSessionStore(s => s.currentSubject);
+  const currentSession = useSessionStore(s => s.currentSession);
 
   useEffect(() => {
     if (!currentSession || !currentSubject) return;

@@ -4,7 +4,7 @@ import { ipc } from '../../../lib/ipc-client';
 import { IpcChannel } from '@shared/types/ipc.types';
 
 export function useExamIntegrity() {
-  const { currentSession } = useSessionStore();
+  const currentSession = useSessionStore(s => s.currentSession);
 
   useEffect(() => {
     if (!currentSession) return;

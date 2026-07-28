@@ -23,7 +23,7 @@ export function useAnalyticsData(sessionId: string) {
         let report = await ipc(IpcChannel.GET_ANALYTICS_REPORT, { sessionId });
         
         if (!report) {
-          console.log('No report found, generating new one...');
+          // Silently generate a new report if none is found
           report = await ipc(IpcChannel.GENERATE_ANALYTICS, { sessionId });
         }
         

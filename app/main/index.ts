@@ -115,10 +115,8 @@ function registerImageProtocol(): void {
 
 // ─── App Lifecycle ──────────────────────────────────────────────
 
-// Enterprise performance flags
-app.commandLine.appendSwitch('enable-gpu-rasterization');
-app.commandLine.appendSwitch('enable-zero-copy');
-app.commandLine.appendSwitch('ignore-gpu-blocklist'); // Help older integrated GPUs
+// Hardware acceleration is handled gracefully by Electron's default blocklist.
+// We avoid forcing GPU rasterization via appendSwitch as it can cause artifacts on weak integrated GPUs.
 
 app.whenReady().then(() => {
   initializeLogger();
@@ -134,6 +132,14 @@ app.whenReady().then(() => {
   } catch (error) {
     log.error('Database initialization failed (native module may need rebuilding):', error);
     log.warn('App will start without database. Run "npm run rebuild" after installing VS Build Tools.');
+    
+    // Show an intelligible error dialog to the user rather than failing silently
+    import('electron').then(({ dialog }) => {
+      dialog.showErrorBox(
+        'Database Initialization Error',
+        `Failed to load the database module.\n\nThis typically happens if the native SQLite binary is missing or incompatible with your system.\n\nError details: ${error instanceof Error ? error.message : String(error)}`
+      );
+    });
   }
 
   // Register custom protocol

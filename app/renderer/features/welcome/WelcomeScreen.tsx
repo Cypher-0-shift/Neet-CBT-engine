@@ -20,7 +20,9 @@ import type { Session } from '@shared/types/session.types';
 
 export function WelcomeScreen() {
   const navigate = useNavigate();
-  const { availableTests, fetchAvailableTests, isLoadingTests } = useTestStore();
+  const availableTests = useTestStore(s => s.availableTests);
+  const fetchAvailableTests = useTestStore(s => s.fetchAvailableTests);
+  const isLoadingTests = useTestStore(s => s.isLoadingTests);
 
   useEffect(() => {
     fetchAvailableTests();

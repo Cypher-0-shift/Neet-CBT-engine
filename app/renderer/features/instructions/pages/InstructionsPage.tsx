@@ -9,7 +9,7 @@ import { useSessionStore } from '../../../stores/sessionStore';
 
 export function InstructionsPage() {
   const navigate = useNavigate();
-  const { currentSession } = useSessionStore();
+  const currentSession = useSessionStore(s => s.currentSession);
 
   const handleBegin = () => {
     navigate('/exam');

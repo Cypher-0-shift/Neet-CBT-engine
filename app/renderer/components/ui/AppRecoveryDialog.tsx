@@ -9,7 +9,7 @@ import { SessionStatus, type Session } from '@shared/types/session.types';
 
 export function AppRecoveryDialog() {
   const [incompleteSession, setIncompleteSession] = useState<Session | null>(null);
-  const { resumeSession } = useSessionStore();
+  const resumeSession = useSessionStore(s => s.resumeSession);
   const navigate = useNavigate();
 
   useEffect(() => {

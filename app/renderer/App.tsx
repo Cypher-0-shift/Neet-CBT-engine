@@ -1,4 +1,4 @@
-import React, { useEffect, Component, ErrorInfo } from 'react';
+import React, { useEffect, Component, ErrorInfo, Suspense, lazy } from 'react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
 class ErrorBoundary extends Component<{children: React.ReactNode}, {hasError: boolean, error: Error | null}> {
@@ -55,7 +55,7 @@ import { CandidateDetailsScreen } from './features/exam/CandidateDetailsScreen';
 import { InstructionsScreen } from './features/exam/InstructionsScreen';
 import { ExamScreen } from './features/exam/ExamScreen';
 import { ReviewScreen } from './features/review/ReviewScreen';
-import { AnalyticsScreen } from './features/analytics/AnalyticsScreen';
+const AnalyticsScreen = lazy(() => import('./features/analytics/AnalyticsScreen').then(m => ({ default: m.AnalyticsScreen })));
 import { HistoryScreen } from './features/history/HistoryScreen';
 
 import { SettingsScreen } from './features/settings/SettingsScreen';
@@ -92,7 +92,11 @@ const AppContent: React.FC = () => {
         <Route path="/test-summary/:testId" element={<TestSummaryScreen />} />
         <Route path="/candidate" element={<CandidateDetailsScreen />} />
         <Route path="/instructions" element={<InstructionsScreen />} />
-        <Route path="/results/:sessionId" element={<AnalyticsScreen />} />
+        <Route path="/results/:sessionId" element={
+          <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-500">Loading Report...</div>}>
+            <AnalyticsScreen />
+          </Suspense>
+        } />
         <Route path="/history" element={<HistoryScreen />} />
 
         <Route path="/settings" element={<SettingsScreen />} />

@@ -2,8 +2,9 @@ import { useSessionStore } from '../../../stores/sessionStore';
 import { useTestStore } from '../../../stores/testStore';
 
 export function SubjectTabs() {
-  const { currentSubject, setCurrentQuestion } = useSessionStore();
-  const { activeTestQuestions } = useTestStore();
+  const currentSubject = useSessionStore(s => s.currentSubject);
+  const setCurrentQuestion = useSessionStore(s => s.setCurrentQuestion);
+  const activeTestQuestions = useTestStore(s => s.activeTestQuestions);
 
   const subjects = Array.from(new Set(activeTestQuestions.map((q) => q.subject)));
 

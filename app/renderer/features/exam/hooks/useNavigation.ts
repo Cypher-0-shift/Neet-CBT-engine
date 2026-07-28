@@ -3,8 +3,10 @@ import { useSessionStore } from '../../../stores/sessionStore';
 import { useTestStore } from '../../../stores/testStore';
 
 export function useNavigation() {
-  const { currentQuestionIndex, currentSubject, setCurrentQuestion } = useSessionStore();
-  const { activeTestQuestions } = useTestStore();
+  const currentQuestionIndex = useSessionStore(s => s.currentQuestionIndex);
+  const currentSubject = useSessionStore(s => s.currentSubject);
+  const setCurrentQuestion = useSessionStore(s => s.setCurrentQuestion);
+  const activeTestQuestions = useTestStore(s => s.activeTestQuestions);
 
   const questionsBySubject = activeTestQuestions.filter(q => q.subject === currentSubject);
   const isFirstQuestion = currentQuestionIndex === 0;

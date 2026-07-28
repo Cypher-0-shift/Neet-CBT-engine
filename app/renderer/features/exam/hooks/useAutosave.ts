@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
+import { useShallow } from 'zustand/shallow';
 import { useSessionStore } from '../../../stores/sessionStore';
+import { flushAll } from './useAnswerSync';
 import { ipc } from '../../../lib/ipc-client';
 import { IpcChannel } from '@shared/types/ipc.types';
 import type { SessionCheckpoint } from '@shared/types/session.types';
@@ -13,8 +15,19 @@ export function useAutosave(intervalMs = 15000) {
     answers,
     reviewFlags,
     visitedQuestions,
-    navigationHistory
-  } = useSessionStore();
+    navigationHistory,
+  } = useSessionStore(
+    useShallow(s => ({
+      currentSession: s.currentSession,
+      currentQuestionIndex: s.currentQuestionIndex,
+      currentSubject: s.currentSubject,
+      timeRemainingSeconds: s.timeRemainingSeconds,
+      answers: s.answers,
+      reviewFlags: s.reviewFlags,
+      visitedQuestions: s.visitedQuestions,
+      navigationHistory: s.navigationHistory,
+    }))
+  );
 
   const lastSavedCheckpoint = useRef<string | null>(null);
   const saveTimeoutId = useRef<NodeJS.Timeout | null>(null);
@@ -89,11 +102,13 @@ export function useAutosave(intervalMs = 15000) {
 
   // Window blur hook for urgent save
   useEffect(() => {
-    const handleBlur = () => {
+    const handleBlur = async () => {
       if (currentSession && currentSubject) {
-        // Triggering an immediate save on window blur
-        // In a real implementation we would directly force `saveCheckpoint(true)` here
-        // bypassing the debounce.
+        // 1. Flush pending answer writes first so the checkpoint is consistent
+        //    with what has been persisted.
+        await flushAll();
+
+        // 2. Save checkpoint
         const simpleAnswers: Record<string, string | null> = {};
         Object.keys(answers).forEach(qId => {
           simpleAnswers[qId] = answers[qId].selectedOptionId;

@@ -12,7 +12,9 @@ const WARNING_THRESHOLDS = [
 ];
 
 export function useIntelligentTimer() {
-  const { currentSession, timeRemainingSeconds, setTimeRemaining } = useSessionStore();
+  const currentSession = useSessionStore(s => s.currentSession);
+  const timeRemainingSeconds = useSessionStore(s => s.timeRemainingSeconds);
+  const setTimeRemaining = useSessionStore(s => s.setTimeRemaining);
   
   const initialTimeLeft = useRef<number | null>(null);
   const startTime = useRef<number | null>(null);

@@ -78,14 +78,7 @@ export function TestSummaryScreen() {
   return (
     <div className="h-full bg-gray-50 p-8 flex flex-col items-center">
       
-      <div className="w-full max-w-3xl flex items-center justify-between mb-8">
-        <Button variant="ghost" onClick={handleCancel}>
-          <ArrowLeft size={20} className="mr-2" />
-          Cancel
-        </Button>
-      </div>
-
-      <Card className="w-full max-w-3xl border-t-4 border-t-app-primary">
+      <Card className="w-full max-w-3xl border-t-4 border-t-app-primary mt-8">
         <CardContent className="p-10">
           
           <div className="text-center border-b border-gray-100 pb-8 mb-8">

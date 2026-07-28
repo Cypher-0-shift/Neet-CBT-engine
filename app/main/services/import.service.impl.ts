@@ -3,6 +3,8 @@ import type { ZipExtractorService } from './zip-extractor.service';
 import type { JsonValidatorService } from './json-validator.service';
 import type { ImageLoaderService } from './image-loader.service';
 import type { TestRepository } from '../database/repositories/test.repository';
+import type { ZipExtractorServiceImpl } from './zip-extractor.service.impl';
+import type { ImageLoaderServiceImpl } from './image-loader.service.impl';
 
 import type { Database } from 'better-sqlite3';
 import type { TestImportResult, ImportStep } from '../../shared/types/test.types';
@@ -26,7 +28,7 @@ export class ImportServiceImpl implements ImportService {
 
   async importTestPackage(
     zipFilePath: string,
-    onProgress: (step: ImportStep, label: string, progress: number) => void
+    onProgress: (step: ImportStep, label: string, progress: number, detail?: string) => void
   ): Promise<TestImportResult> {
     const result: TestImportResult = {
       success: false,
@@ -40,9 +42,9 @@ export class ImportServiceImpl implements ImportService {
     let newTestId = uuidv4();
 
     try {
-      // 1. Extract ZIP
+      // 1. Extract ZIP — pass onProgress for per-file granular detail
       onProgress('extracting', 'Extracting package...', 10);
-      tempDir = await this.zipExtractor.extract(zipFilePath);
+      tempDir = await (this.zipExtractor as ZipExtractorServiceImpl).extract(zipFilePath, onProgress);
 
       // 2. Read Metadata
       onProgress('reading_metadata', 'Reading metadata...', 20);
@@ -64,9 +66,9 @@ export class ImportServiceImpl implements ImportService {
       onProgress('validating', 'Validating questions schema...', 50);
       await this.jsonValidator.validateQuestions(questionsArr);
 
-      // 5. Load Images
+      // 5. Load Images — pass onProgress for per-file granular detail
       onProgress('loading_images', 'Copying images...', 60);
-      await this.imageLoader.processTestImages(tempDir, newTestId);
+      await (this.imageLoader as ImageLoaderServiceImpl).processTestImages(tempDir, newTestId, onProgress);
 
       // 6. Database Transaction
       onProgress('saving', 'Saving to database...', 80);
