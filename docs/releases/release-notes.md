@@ -1,6 +1,6 @@
 # Release Notes
 
-## v1.0.1 - Performance & UI Polish
+## v1.1.0 - Performance & UI Polish
 **Date**: July 2026
 
 ### Improvements
